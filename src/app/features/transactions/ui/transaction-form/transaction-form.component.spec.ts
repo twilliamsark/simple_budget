@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import TransactionFormComponent from './transaction-form.component';
 import { TransactionsService } from '../../data-access/transactions.service';
 import { CategoriesService } from '../../../../shared/data-access/categories.service';
@@ -23,6 +24,7 @@ describe('TransactionFormComponent', () => {
       imports: [TransactionFormComponent],
       providers: [
         provideRouter([]),
+        provideNativeDateAdapter(),
         TransactionsService,
         CategoriesService,
         {
@@ -75,7 +77,7 @@ describe('TransactionFormComponent', () => {
     fixture.detectChanges();
 
     const comp = fixture.componentInstance;
-    comp.date = '2026-01-15';
+    comp.dateValue = new Date(2026, 0, 15);
     comp.type = 'expense';
     comp.amountDisplay = '50.00';
     comp.categoryId = comp.categories()[0]?.id ?? '';
@@ -102,7 +104,7 @@ describe('TransactionFormComponent', () => {
     fixture.detectChanges();
 
     const comp = fixture.componentInstance;
-    comp.date = '2026-01-15';
+    comp.dateValue = new Date(2026, 0, 15);
     comp.type = 'income';
     comp.amountDisplay = '100.50';
     comp.categoryId = comp.categories()[0]?.id ?? '';
@@ -135,6 +137,7 @@ describe('TransactionFormComponent (edit mode)', () => {
       imports: [TransactionFormComponent],
       providers: [
         provideRouter([]),
+        provideNativeDateAdapter(),
         TransactionsService,
         CategoriesService,
         {
@@ -175,7 +178,7 @@ describe('TransactionFormComponent (edit mode)', () => {
     const fixture = TestBed.createComponent(TransactionFormComponent);
     fixture.detectChanges();
     const comp = fixture.componentInstance;
-    expect(comp.date).toBe('2026-01-20');
+    expect(comp.dateValue).toEqual(new Date(2026, 0, 20));
     expect(comp.type).toBe('expense');
     expect(comp.amountDisplay).toBe('75.00');
     expect(comp.payee).toBe('Original Payee');
