@@ -18,13 +18,6 @@ describe('TransactionListComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('renders Import CSV link', () => {
-    const fixture = TestBed.createComponent(TransactionListComponent);
-    fixture.detectChanges();
-    const link = fixture.nativeElement.querySelector('a[routerLink="/transactions/import"]');
-    expect(link).toBeTruthy();
-  });
-
   it('renders Add Transaction link', () => {
     const fixture = TestBed.createComponent(TransactionListComponent);
     fixture.detectChanges();

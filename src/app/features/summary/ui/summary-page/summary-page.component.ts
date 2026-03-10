@@ -149,20 +149,8 @@ export default class SummaryPageComponent {
         labels: {
           padding: 16,
           usePointStyle: true,
-          generateLabels: (chart) => {
-            const dataset = chart.data.datasets?.[0];
-            if (!dataset?.data?.length) return [];
-            const labels = chart.data.labels ?? [];
-            const bgColors = dataset.backgroundColor as string[] | undefined;
-            return (dataset.data as number[]).map((value, i) => ({
-              text: `${labels[i] ?? ''}  $${value.toFixed(2)}`,
-              fillStyle: bgColors?.[i] ?? '#ccc',
-              strokeStyle: '#fff',
-              lineWidth: 2,
-              hidden: false,
-              index: i,
-            }));
-          },
+          generateLabels: (chart) =>
+            this.generateLegendLabels(chart as { data: ChartConfiguration<'pie'>['data'] }),
         },
       },
       tooltip: {
@@ -180,6 +168,24 @@ export default class SummaryPageComponent {
       },
     },
   };
+
+  private generateLegendLabels(
+    chart: { data: ChartConfiguration<'pie'>['data'] }
+  ): { text: string; fillStyle: string; strokeStyle: string; lineWidth: number; hidden: boolean; index: number }[] {
+    const data = chart.data;
+    const dataset = data.datasets?.[0];
+    if (!dataset?.data?.length) return [];
+    const labels = data.labels ?? [];
+    const bgColors = dataset.backgroundColor as string[] | undefined;
+    return (dataset.data as number[]).map((value, i) => ({
+      text: `${labels[i] ?? ''}  $${value.toFixed(2)}`,
+      fillStyle: bgColors?.[i] ?? '#ccc',
+      strokeStyle: '#fff',
+      lineWidth: 2,
+      hidden: false,
+      index: i,
+    }));
+  }
 
   protected formatAmount(cents: number): string {
     const sign = cents < 0 ? '-' : '';
