@@ -68,7 +68,7 @@ const WEDGE_COLORS = [
       margin: 1rem 0;
     }
     .pie-container {
-      max-width: 400px;
+      max-width: 800px;
       margin: 0 auto;
     }
     .total {
