@@ -55,4 +55,11 @@ export const routes: Routes = [
         (m) => m.default
       ),
   },
+  {
+    path: 'summary',
+    loadComponent: () =>
+      import('./features/summary/ui/summary-page/summary-page.component').then(
+        (m) => m.default
+      ),
+  },
 ];
