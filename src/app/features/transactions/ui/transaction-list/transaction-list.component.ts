@@ -87,6 +87,7 @@ interface TransactionFilterState {
         <span class="spacer"></span>
         <a mat-raised-button color="primary" routerLink="/transactions/new">Add Transaction</a>
         <a mat-raised-button color="primary" routerLink="/transactions/import">Import CSV</a>
+        <button mat-raised-button color="primary" (click)="exportCsv()">Export CSV</button>
       </mat-toolbar>
 
       <div class="filters">
@@ -418,5 +419,36 @@ export default class TransactionListComponent implements AfterViewInit {
     if (confirm('Delete this transaction?')) {
       this.transactions.delete(tx.id);
     }
+  }
+
+  protected exportCsv(): void {
+    const rows = this.getFilteredList();
+    const headers = ['Date', 'Payee', 'Payer', 'Amount', 'Category', 'Cleared', 'Memo'];
+    const escape = (v: string): string => {
+      if (/[",\r\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+      return v;
+    };
+    const lines = [
+      headers.join(','),
+      ...rows.map((tx) =>
+        [
+          tx.date,
+          escape(tx.payee),
+          escape(tx.payer ?? ''),
+          (tx.amount / 100).toFixed(2),
+          escape(this.categoryName(tx.categoryId)),
+          tx.cleared ? 'Yes' : 'No',
+          escape(tx.memo ?? ''),
+        ].join(',')
+      ),
+    ];
+    const csv = lines.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 }
