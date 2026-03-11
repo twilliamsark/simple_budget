@@ -5,6 +5,7 @@ import {
   effect,
   ViewChild,
   AfterViewInit,
+  ElementRef,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
@@ -59,8 +60,21 @@ import type { Account } from '../../../../shared/models/account.model';
       <mat-toolbar>
         <span>Accounts</span>
         <span class="spacer"></span>
-        <a mat-raised-button color="primary" routerLink="/accounts/new"> Add Account </a>
+        <a mat-raised-button color="primary" routerLink="/accounts/new">Add Account</a>
+        <button mat-raised-button color="primary" type="button" (click)="importCsvClick()">
+          Import CSV
+        </button>
+        <button mat-raised-button color="primary" type="button" (click)="exportCsv()">
+          Export CSV
+        </button>
       </mat-toolbar>
+      <input
+        #fileInput
+        type="file"
+        accept=".csv"
+        (change)="onImportFile($event)"
+        style="display: none"
+      />
 
       <div class="table-container">
         <table mat-table [dataSource]="dataSource" matSort>
@@ -128,6 +142,7 @@ import type { Account } from '../../../../shared/models/account.model';
 })
 export default class AccountListComponent implements AfterViewInit {
   @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
 
   private readonly accountsService = inject(AccountsService);
 
@@ -161,5 +176,108 @@ export default class AccountListComponent implements AfterViewInit {
         alert('Cannot delete: this account has transactions.');
       }
     }
+  }
+
+  protected importCsvClick(): void {
+    this.fileInputRef?.nativeElement?.click();
+  }
+
+  protected onImportFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result as string;
+      const rows = this.parseCsv(text);
+      if (rows.length < 2) return;
+      const headers = rows[0].map((c) => c.toLowerCase());
+      const nameIdx = headers.indexOf('name');
+      const typeIdx = headers.indexOf('type');
+      const noteIdx = headers.indexOf('note');
+      if (nameIdx === -1) return;
+      let created = 0;
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const name = (row[nameIdx] ?? '').trim();
+        if (!name) continue;
+        const typeVal = (row[typeIdx] ?? '').trim().toLowerCase();
+        const isInternal = typeVal !== 'external' && typeVal !== 'no' && typeVal !== 'false';
+        const note = noteIdx >= 0 ? (row[noteIdx] ?? '').trim() || undefined : undefined;
+        this.accountsService.create({ name, isInternal, note });
+        created++;
+      }
+      if (created > 0) {
+        this.dataSource.data = this.accountsService.accounts();
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  private parseCsv(text: string): string[][] {
+    const rows: string[][] = [];
+    let row: string[] = [];
+    let field = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (text[i + 1] === '"') {
+            field += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          field += c;
+        }
+      } else {
+        if (c === '"') {
+          inQuotes = true;
+        } else if (c === ',' || c === '\n' || (c === '\r' && text[i + 1] === '\n')) {
+          if (c === '\r') i++;
+          row.push(field);
+          field = '';
+          if (c !== ',') {
+            rows.push(row);
+            row = [];
+          }
+        } else {
+          field += c;
+        }
+      }
+    }
+    row.push(field);
+    if (row.length > 0 || field !== '') rows.push(row);
+    return rows;
+  }
+
+  protected exportCsv(): void {
+    const accounts = this.accountsService.accounts();
+    const escape = (v: string): string => {
+      if (/[",\r\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+      return v;
+    };
+    const headers = ['Name', 'Type', 'Note'];
+    const lines = [
+      headers.join(','),
+      ...accounts.map((acc) =>
+        [
+          escape(acc.name),
+          acc.isInternal ? 'Internal' : 'External',
+          escape(acc.note ?? ''),
+        ].join(',')
+      ),
+    ];
+    const csv = lines.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `accounts-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 }

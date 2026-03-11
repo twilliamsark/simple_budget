@@ -42,9 +42,12 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "dist/simple_budget/browser",
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "baseHref": "./",
+            "deployUrl": "./",
             "assets": [
               {
                 "glob": "**/*",
