@@ -85,7 +85,8 @@ interface TransactionFilterState {
           }}</span></span
         >
         <span class="spacer"></span>
-        <a mat-button routerLink="/transactions/new">Add Transaction</a>
+        <a mat-raised-button color="primary" routerLink="/transactions/new">Add Transaction</a>
+        <a mat-raised-button color="primary" routerLink="/transactions/import">Import CSV</a>
       </mat-toolbar>
 
       <div class="filters">
