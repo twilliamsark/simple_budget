@@ -1,7 +1,8 @@
 {
   "name": "app",
+  "productName": "SimpleBudget",
   "version": "0.0.0",
-  "main": "out/main.js",
+  "main": "dist/electron/main.js",
   "scripts": {
     "ng": "ng",
     "electron:compile": "tsc -p tsconfig.electron.json",
