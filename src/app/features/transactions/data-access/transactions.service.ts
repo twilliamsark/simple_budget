@@ -65,4 +65,22 @@ export class TransactionsService {
   getByImportHash(hash: string): Transaction | undefined {
     return this.transactions().find((t) => t.importHash === hash);
   }
+
+  /** Set cleared to false for all transactions. */
+  markAllUncleared(): void {
+    const now = new Date().toISOString();
+    this.transactions.update((t) =>
+      t.map((x) => (x.cleared ? { ...x, cleared: false, updatedAt: now } : x))
+    );
+    this.save();
+  }
+
+  /** Set cleared to true for all transactions. */
+  markAllCleared(): void {
+    const now = new Date().toISOString();
+    this.transactions.update((t) =>
+      t.map((x) => (!x.cleared ? { ...x, cleared: true, updatedAt: now } : x))
+    );
+    this.save();
+  }
 }

@@ -88,6 +88,8 @@ interface TransactionFilterState {
         <a mat-raised-button color="primary" routerLink="/transactions/new">Add Transaction</a>
         <a mat-raised-button color="primary" routerLink="/transactions/import">Import CSV</a>
         <button mat-raised-button color="primary" (click)="exportCsv()">Export CSV</button>
+        <button mat-raised-button color="primary" type="button" (click)="markAllCleared()">Mark All Cleared</button>
+        <button mat-raised-button color="primary" type="button" (click)="markAllUncleared()">Mark All Uncleared</button>
       </mat-toolbar>
 
       <div class="filters">
@@ -208,9 +210,17 @@ interface TransactionFilterState {
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let tx" class="actions-cell">
-              <a mat-icon-button [routerLink]="['/transactions', tx.id, 'edit']" aria-label="Edit">
+              <button
+                mat-icon-button
+                (click)="toggleCleared(tx)"
+                [attr.aria-label]="tx.cleared ? 'Mark as not cleared' : 'Mark as cleared'"
+                [class.cleared-icon]="tx.cleared"
+              >
+                <mat-icon>{{ tx.cleared ? 'check_circle' : 'cancel' }}</mat-icon>
+              </button>
+              <button mat-icon-button [routerLink]="['/transactions', tx.id, 'edit']" aria-label="Edit">
                 <mat-icon>edit</mat-icon>
-              </a>
+              </button>
               <button mat-icon-button color="warn" (click)="delete(tx)" aria-label="Delete">
                 <mat-icon>delete</mat-icon>
               </button>
@@ -266,9 +276,10 @@ interface TransactionFilterState {
     .actions-cell a,
     .actions-cell button {
       display: inline-flex;
+      margin-right: 4px;
     }
-    .actions-cell a {
-      margin-right: 10px;
+    .actions-cell button.cleared-icon .mat-icon {
+      color: var(--mat-sys-primary, #005cbb);
     }
     .income {
       color: #2e7d32;
@@ -415,9 +426,25 @@ export default class TransactionListComponent implements AfterViewInit {
     return this.categoriesService.categories().find((c) => c.id === id)?.name ?? '—';
   }
 
+  protected toggleCleared(tx: Transaction): void {
+    this.transactions.update(tx.id, { cleared: !tx.cleared });
+  }
+
   protected delete(tx: Transaction): void {
     if (confirm('Delete this transaction?')) {
       this.transactions.delete(tx.id);
+    }
+  }
+
+  protected markAllCleared(): void {
+    if (confirm('Mark all transactions as cleared?')) {
+      this.transactions.markAllCleared();
+    }
+  }
+
+  protected markAllUncleared(): void {
+    if (confirm('Mark all transactions as not cleared?')) {
+      this.transactions.markAllUncleared();
     }
   }
 
