@@ -24,6 +24,7 @@ const SEED_CATEGORIES: Category[] = [
   { id: 'cat-health', name: 'Health' },
   { id: 'cat-rent', name: 'Rent' },
   { id: 'cat-payroll', name: 'Payroll' },
+  { id: 'cat-utilities', name: 'Utilities' },
 ];
 
 @Injectable({ providedIn: 'root' })
