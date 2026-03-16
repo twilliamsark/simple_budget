@@ -81,7 +81,8 @@ describe('TransactionFormComponent', () => {
     comp.type = 'expense';
     comp.amountDisplay = '50.00';
     comp.categoryId = comp.categories()[0]?.id ?? '';
-    comp.payee = 'Test Payee';
+    comp.payeeAccountId = '';
+    comp.payeeFreeform = 'Test Payee';
     comp.cleared = true;
 
     fixture.detectChanges();
@@ -108,7 +109,8 @@ describe('TransactionFormComponent', () => {
     comp.type = 'income';
     comp.amountDisplay = '100.50';
     comp.categoryId = comp.categories()[0]?.id ?? '';
-    comp.payee = 'Salary';
+    comp.payeeAccountId = '';
+    comp.payeeFreeform = 'Salary';
     comp.cleared = true;
 
     const form = fixture.nativeElement.querySelector('form');
@@ -181,7 +183,7 @@ describe('TransactionFormComponent (edit mode)', () => {
     expect(comp.dateValue).toEqual(new Date(2026, 0, 20));
     expect(comp.type).toBe('expense');
     expect(comp.amountDisplay).toBe('75.00');
-    expect(comp.payee).toBe('Original Payee');
+    expect(comp.payeeFreeform).toBe('Original Payee');
     expect(comp.cleared).toBe(false);
   });
 
@@ -193,7 +195,8 @@ describe('TransactionFormComponent (edit mode)', () => {
     fixture.detectChanges();
 
     const comp = fixture.componentInstance;
-    comp.payee = 'Updated Payee';
+    comp.payeeAccountId = '';
+    comp.payeeFreeform = 'Updated Payee';
     comp.amountDisplay = '80.00';
 
     const form = fixture.nativeElement.querySelector('form');

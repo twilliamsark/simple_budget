@@ -250,6 +250,9 @@ interface TransactionFilterState {
               <button mat-icon-button [routerLink]="['/transactions', tx.id, 'edit']" aria-label="Edit">
                 <mat-icon>edit</mat-icon>
               </button>
+              <button mat-icon-button (click)="copyTransaction(tx)" aria-label="Copy transaction">
+                <mat-icon>content_copy</mat-icon>
+              </button>
               <button mat-icon-button color="warn" (click)="delete(tx)" aria-label="Delete">
                 <mat-icon>delete</mat-icon>
               </button>
@@ -472,6 +475,21 @@ export default class TransactionListComponent implements AfterViewInit {
 
   protected toggleCleared(tx: Transaction): void {
     this.transactions.update(tx.id, { cleared: !tx.cleared });
+  }
+
+  protected copyTransaction(tx: Transaction): void {
+    const today = new Date().toISOString().slice(0, 10);
+    this.transactions.create({
+      date: today,
+      amount: tx.amount,
+      categoryId: tx.categoryId,
+      payee: tx.payee,
+      payer: tx.payer,
+      owner: tx.owner,
+      cleared: false,
+      tags: [...tx.tags],
+      memo: tx.memo,
+    });
   }
 
   protected delete(tx: Transaction): void {
