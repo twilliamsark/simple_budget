@@ -84,6 +84,8 @@ export class ImportParserService {
     const amountRaw = getVal(mapping.amount);
     const payee = getVal(mapping.payee) || getVal(mapping.category ?? '') || 'Unknown';
     const payer = mapping.payer ? getVal(mapping.payer) || undefined : undefined;
+    const ownerRaw = mapping.owner ? getVal(mapping.owner) : '';
+    const owner = ownerRaw.trim() || 'TW';
 
     const date = this.parseDate(dateStr) || dateStr;
     const amount = this.parseAmount(amountRaw);
@@ -96,6 +98,7 @@ export class ImportParserService {
       amount,
       payee,
       payer,
+      owner,
       categoryName,
       importHash,
     };
@@ -117,6 +120,7 @@ export class ImportParserService {
       amount: find('amount'),
       payee: find('memo', 'to', 'description', 'payee'),
       payer: find('payer', 'from') || undefined,
+      owner: find('owner') || undefined,
       category: find('category') || undefined,
     };
   }

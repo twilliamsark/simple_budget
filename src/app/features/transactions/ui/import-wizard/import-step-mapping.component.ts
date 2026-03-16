@@ -88,6 +88,18 @@ import { MatButton } from '@angular/material/button';
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
+            <mat-label>Owner (optional, default TW if blank)</mat-label>
+            <mat-select
+              [ngModel]="mapping().owner"
+              (ngModelChange)="updateMapping('owner', $event)"
+            >
+              <mat-option value="">-- None (use TW) --</mat-option>
+              @for (h of headers(); track h) {
+                <mat-option [value]="h">{{ h }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
             <mat-label>Category (optional)</mat-label>
             <mat-select
               [ngModel]="mapping().category"

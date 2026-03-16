@@ -96,6 +96,10 @@ interface ResolvedRow extends TransactionImportRow {
               <th mat-header-cell *matHeaderCellDef>Payer</th>
               <td mat-cell *matCellDef="let row">{{ row.payer || '—' }}</td>
             </ng-container>
+            <ng-container matColumnDef="owner">
+              <th mat-header-cell *matHeaderCellDef>Owner</th>
+              <td mat-cell *matCellDef="let row">{{ row.owner || 'TW' }}</td>
+            </ng-container>
             <ng-container matColumnDef="amount">
               <th mat-header-cell *matHeaderCellDef>Amount</th>
               <td
@@ -224,6 +228,7 @@ export class ImportStepPreviewComponent {
     'date',
     'payee',
     'payer',
+    'owner',
     'amount',
     'category',
     'status',
@@ -280,7 +285,8 @@ export class ImportStepPreviewComponent {
         categoryId: this.resolveCategory(row.categoryName),
         payee: row.payee,
         payer: row.payer,
-        cleared: true,
+        owner: row.owner ?? 'TW',
+        cleared: false,
         tags: [],
         importHash: row.importHash,
       };

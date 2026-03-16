@@ -86,7 +86,7 @@ import type { TransactionCreate } from '../../../../shared/models/transaction.mo
           <mat-form-field appearance="outline">
             <mat-label>Category</mat-label>
             <mat-select [(ngModel)]="categoryId" name="categoryId" required>
-              @for (c of categories(); track c.id) {
+              @for (c of sortedCategories(); track c.id) {
                 <mat-option [value]="c.id">{{ c.name }}</mat-option>
               }
             </mat-select>
@@ -110,6 +110,16 @@ import type { TransactionCreate } from '../../../../shared/models/transaction.mo
               [(ngModel)]="payer"
               name="payer"
               placeholder="Who paid / source of payment"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Owner (optional)</mat-label>
+            <input
+              matInput
+              [(ngModel)]="owner"
+              name="owner"
+              placeholder="e.g. TW"
             />
           </mat-form-field>
 
@@ -155,6 +165,11 @@ export default class TransactionFormComponent {
   readonly isEdit = computed(() => !!this.transactionId());
 
   readonly categories = this.categoriesService.categories;
+  readonly sortedCategories = computed(() =>
+    [...this.categoriesService.categories()].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    )
+  );
 
   dateValue: Date | null = new Date();
   type: 'income' | 'expense' = 'expense';
@@ -162,6 +177,7 @@ export default class TransactionFormComponent {
   categoryId = '';
   payee = '';
   payer = '';
+  owner = '';
   cleared = true;
 
   constructor() {
@@ -185,14 +201,16 @@ export default class TransactionFormComponent {
         this.categoryId = tx.categoryId;
         this.payee = tx.payee;
         this.payer = tx.payer ?? '';
+        this.owner = tx.owner ?? '';
         this.cleared = tx.cleared;
       } else {
         this.dateValue = new Date();
         this.type = 'expense';
         this.amountDisplay = '';
-        this.categoryId = this.categories()[0]?.id ?? '';
+        this.categoryId = this.sortedCategories()[0]?.id ?? '';
         this.payee = '';
         this.payer = '';
+        this.owner = '';
         this.cleared = true;
       }
     });
@@ -224,6 +242,7 @@ export default class TransactionFormComponent {
       categoryId: this.categoryId,
       payee: this.payee.trim(),
       payer: this.payer.trim() || undefined,
+      owner: this.owner.trim() || undefined,
       cleared: this.cleared,
       tags: [],
     };

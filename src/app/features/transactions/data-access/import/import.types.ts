@@ -1,10 +1,11 @@
-export type ImportField = 'date' | 'amount' | 'payee' | 'payer' | 'category';
+export type ImportField = 'date' | 'amount' | 'payee' | 'payer' | 'owner' | 'category';
 
 export interface ImportColumnMapping {
   date: string;
   amount: string;
   payee: string;
   payer?: string;
+  owner?: string;
   category?: string;
 }
 

@@ -5,6 +5,7 @@ export interface Transaction {
   categoryId: string;
   payee: string;
   payer?: string;
+  owner?: string;
   cleared: boolean;
   tags: string[];
   memo?: string;
@@ -21,6 +22,7 @@ export interface TransactionImportRow {
   amount: number;
   payee: string;
   payer?: string;
+  owner?: string;
   categoryId?: string;
   categoryName?: string;
   importHash: string;

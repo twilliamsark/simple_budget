@@ -41,6 +41,8 @@ interface TransactionFilterState {
   search: string;
   categoryId: string;
   payer: string;
+  owner: string;
+  type: '' | 'income' | 'expense';
   amountMin: string | number;
   amountMax: string | number;
   dateFrom: string;
@@ -133,12 +135,29 @@ interface TransactionFilterState {
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
+            <mat-label>Type</mat-label>
+            <mat-select [(ngModel)]="filterState.type" (ngModelChange)="applyFilters()">
+              <mat-option value="">All</mat-option>
+              <mat-option value="income">Income</mat-option>
+              <mat-option value="expense">Expense</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
             <mat-label>Payer</mat-label>
             <input
               matInput
               [(ngModel)]="filterState.payer"
               (ngModelChange)="applyFilters()"
               placeholder="Filter by payer"
+            />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Owner</mat-label>
+            <input
+              matInput
+              [(ngModel)]="filterState.owner"
+              (ngModelChange)="applyFilters()"
+              placeholder="Filter by owner"
             />
           </mat-form-field>
           <mat-form-field appearance="outline">
@@ -188,6 +207,16 @@ interface TransactionFilterState {
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Payer</th>
             <td mat-cell *matCellDef="let tx">{{ tx.payer || '—' }}</td>
           </ng-container>
+          <ng-container matColumnDef="owner">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Owner</th>
+            <td mat-cell *matCellDef="let tx">{{ tx.owner || '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+            <td mat-cell *matCellDef="let tx" [class.income]="tx.amount > 0" [class.expense]="tx.amount < 0">
+              {{ tx.amount >= 0 ? 'Income' : 'Expense' }}
+            </td>
+          </ng-container>
           <ng-container matColumnDef="amount">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
             <td
@@ -230,7 +259,7 @@ interface TransactionFilterState {
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
           <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" colspan="7">
+            <td class="mat-cell" colspan="9">
               {{ hasActiveFilters() ? 'No transactions match your filters.' : 'No transactions. Import a CSV or add manually.' }}
             </td>
           </tr>
@@ -306,6 +335,8 @@ export default class TransactionListComponent implements AfterViewInit {
     search: '',
     categoryId: '',
     payer: '',
+    owner: '',
+    type: '',
     amountMin: '',
     amountMax: '',
     dateFrom: '',
@@ -316,6 +347,8 @@ export default class TransactionListComponent implements AfterViewInit {
     'date',
     'payee',
     'payer',
+    'owner',
+    'type',
     'amount',
     'category',
     'cleared',
@@ -341,13 +374,20 @@ export default class TransactionListComponent implements AfterViewInit {
   private matchesFilter(tx: Transaction, state: TransactionFilterState): boolean {
     if (state.search?.trim()) {
       const term = state.search.trim().toLowerCase();
-      const searchable = [tx.date, tx.payee, tx.payer ?? '', this.formatAmount(tx.amount), this.categoryName(tx.categoryId), tx.cleared ? 'yes' : 'no'].join(' ').toLowerCase();
+      const typeStr = tx.amount >= 0 ? 'income' : 'expense';
+      const searchable = [tx.date, tx.payee, tx.payer ?? '', tx.owner ?? '', typeStr, this.formatAmount(tx.amount), this.categoryName(tx.categoryId), tx.cleared ? 'yes' : 'no'].join(' ').toLowerCase();
       if (!searchable.includes(term)) return false;
     }
     if (state.categoryId && tx.categoryId !== state.categoryId) return false;
+    if (state.type === 'income' && tx.amount < 0) return false;
+    if (state.type === 'expense' && tx.amount >= 0) return false;
     if (state.payer?.trim()) {
       const payer = (tx.payer ?? '').toLowerCase();
       if (!payer.includes(state.payer.trim().toLowerCase())) return false;
+    }
+    if (state.owner?.trim()) {
+      const owner = (tx.owner ?? '').toLowerCase();
+      if (!owner.includes(state.owner.trim().toLowerCase())) return false;
     }
     const amountDollars = tx.amount / 100;
     const min = typeof state.amountMin === 'number' ? state.amountMin : parseFloat(String(state.amountMin));
@@ -368,6 +408,8 @@ export default class TransactionListComponent implements AfterViewInit {
     this.filterState.search = '';
     this.filterState.categoryId = '';
     this.filterState.payer = '';
+    this.filterState.owner = '';
+    this.filterState.type = '';
     this.filterState.amountMin = '';
     this.filterState.amountMax = '';
     this.filterState.dateFrom = '';
@@ -381,7 +423,7 @@ export default class TransactionListComponent implements AfterViewInit {
 
   protected hasActiveFilters(): boolean {
     const s = this.filterState;
-    return !!(s.search?.trim() || s.categoryId || s.payer?.trim() || s.amountMin !== '' || s.amountMax !== '' || s.dateFrom || s.dateTo);
+    return !!(s.search?.trim() || s.categoryId || s.payer?.trim() || s.owner?.trim() || s.type || s.amountMin !== '' || s.amountMax !== '' || s.dateFrom || s.dateTo);
   }
 
   protected filteredTotalLabel = computed(() => {
@@ -409,6 +451,8 @@ export default class TransactionListComponent implements AfterViewInit {
       if (prop === 'date') return tx.date;
       if (prop === 'payee') return tx.payee.toLowerCase();
       if (prop === 'payer') return (tx.payer ?? '').toLowerCase();
+      if (prop === 'owner') return (tx.owner ?? '').toLowerCase();
+      if (prop === 'type') return tx.amount >= 0 ? 'income' : 'expense';
       if (prop === 'amount') return tx.amount;
       if (prop === 'category') return this.categoryName(tx.categoryId).toLowerCase();
       if (prop === 'cleared') return tx.cleared ? 'yes' : 'no';
@@ -450,7 +494,7 @@ export default class TransactionListComponent implements AfterViewInit {
 
   protected exportCsv(): void {
     const rows = this.getFilteredList();
-    const headers = ['Date', 'Payee', 'Payer', 'Amount', 'Category', 'Cleared', 'Memo'];
+    const headers = ['Date', 'Payee', 'Payer', 'Owner', 'Type', 'Amount', 'Category', 'Cleared', 'Memo'];
     const escape = (v: string): string => {
       if (/[",\r\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
       return v;
@@ -462,6 +506,8 @@ export default class TransactionListComponent implements AfterViewInit {
           tx.date,
           escape(tx.payee),
           escape(tx.payer ?? ''),
+          escape(tx.owner ?? ''),
+          tx.amount >= 0 ? 'Income' : 'Expense',
           (tx.amount / 100).toFixed(2),
           escape(this.categoryName(tx.categoryId)),
           tx.cleared ? 'Yes' : 'No',
