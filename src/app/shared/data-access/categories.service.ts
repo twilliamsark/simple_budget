@@ -23,6 +23,7 @@ const SEED_CATEGORIES: Category[] = [
   { id: 'cat-tithe', name: 'Tithe' },
   { id: 'cat-health', name: 'Health' },
   { id: 'cat-rent', name: 'Rent' },
+  { id: 'cat-payroll', name: 'Payroll' },
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -36,13 +37,24 @@ export class CategoriesService {
   private load(): void {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
+      let list: Category[];
       if (raw) {
         const parsed = JSON.parse(raw);
-        this.categories.set(Array.isArray(parsed) ? parsed : SEED_CATEGORIES);
+        list = Array.isArray(parsed) ? parsed : [...SEED_CATEGORIES];
       } else {
-        this.categories.set([...SEED_CATEGORIES]);
-        this.save();
+        list = [...SEED_CATEGORIES];
       }
+      // Ensure seed categories exist (e.g. Payroll) for existing users
+      const names = new Set(list.map((c) => c.name.toLowerCase()));
+      const beforeCount = list.length;
+      for (const seed of SEED_CATEGORIES) {
+        if (!names.has(seed.name.toLowerCase())) {
+          list.push(seed);
+          names.add(seed.name.toLowerCase());
+        }
+      }
+      this.categories.set(list);
+      if (list.length > beforeCount) this.save();
     } catch {
       this.categories.set([...SEED_CATEGORIES]);
     }

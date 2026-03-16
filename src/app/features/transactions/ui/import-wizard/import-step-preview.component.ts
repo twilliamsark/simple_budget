@@ -10,6 +10,7 @@ import {
 import { ImportParserService } from '../../data-access/import/import-parser.service';
 import { TransactionsService } from '../../data-access/transactions.service';
 import { CategoriesService } from '../../../../shared/data-access/categories.service';
+import { AccountsService } from '../../../../shared/data-access/accounts.service';
 import type { ImportColumnMapping } from '../../data-access/import/import.types';
 import type { TransactionImportRow } from '../../../../shared/models/transaction.model';
 import type { TransactionCreate } from '../../../../shared/models/transaction.model';
@@ -217,6 +218,7 @@ export class ImportStepPreviewComponent {
   private readonly parser = inject(ImportParserService);
   private readonly transactions = inject(TransactionsService);
   private readonly categories = inject(CategoriesService);
+  private readonly accounts = inject(AccountsService);
 
   readonly headers = input.required<string[]>();
   readonly rows = input.required<string[][]>();
@@ -279,12 +281,23 @@ export class ImportStepPreviewComponent {
   protected doImport(): void {
     const toImport = this.rowsToImport();
     for (const row of toImport) {
+      let payer = row.payer;
+      if (payer?.trim()) {
+        const existing = this.accounts.findByName(payer.trim());
+        if (!existing) {
+          this.accounts.create({
+            name: payer.trim(),
+            isInternal: false,
+            note: 'To review',
+          });
+        }
+      }
       const payload: TransactionCreate = {
         date: row.date,
         amount: row.amount,
         categoryId: this.resolveCategory(row.categoryName),
         payee: row.payee,
-        payer: row.payer,
+        payer: payer?.trim() || undefined,
         owner: row.owner ?? 'TW',
         cleared: false,
         tags: [],
